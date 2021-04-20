@@ -94,7 +94,23 @@ client.connect(err => {
     })
 
     // show specific order service API (Role : User)
+    app.get('/specificOrders', (req, res) => {
+      userOrderCollection.find({})
+      .toArray((err, documents) => {
+          res.send(documents);
+      })
+    })
     
+    
+    app.post('/addOrder', (req, res) => {
+          const newOrder = req.body;
+          console.log(newOrder)
+          userOrderCollection.insertOne(newOrder)
+        .then(result => {
+          console.log(result)
+          res.send(result.insertedCount > 0);
+        })
+    })
 
 });
 
