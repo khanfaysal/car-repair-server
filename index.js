@@ -24,6 +24,8 @@ client.connect(err => {
     const serviceCollection = client.db("carRepair").collection("servicebook");
     const feedbackCollection = client.db("carRepair").collection("userfeedback");
     const userOrderCollection = client.db("carRepair").collection("orders");
+    const adminCollection = client.db("carRepair").collection("admin");
+
     console.log('database connected');
 
     // all car service books API database code (Role: Admin)
@@ -95,11 +97,34 @@ client.connect(err => {
 
     // show specific order service API (Role : User)
     app.get('/specificOrders', (req, res) => {
-      userOrderCollection.find({})
+      userOrderCollection.find({email: req.query.email})
       .toArray((err, documents) => {
           res.send(documents);
       })
     })
+
+    // Load Single Order
+  app.get('/order/:id', (req, res) => {
+    const id = ObjectID(req.params.id);
+    userOrderCollection.find({_id: id})
+    .toArray((err, documents) => {
+      res.send(documents[0]);
+    })
+  })
+
+  // Data Update API
+  app.patch('/updateOrder/:id', (req, res) => {
+    const id = ObjectID(req.params.id);
+    userOrderCollection.updateOne(
+      {_id: id},
+      {
+        $set: {status: req.body.status}
+      }
+    )
+    .then(result => {
+      console.log('updated');
+    })
+  })
     
     
     app.post('/addOrder', (req, res) => {
@@ -110,6 +135,27 @@ client.connect(err => {
           console.log(result)
           res.send(result.insertedCount > 0);
         })
+    })
+
+    // admin collection API
+
+    // Admin Collections Setup
+    app.post('/addAdmin', (req, res) => {
+      const newAdmin = req.body;
+      console.log(newAdmin);
+      adminCollection.insertOne(newAdmin)
+      .then(result => {
+        console.log('inserted count:', result.insertedCount);
+        res.send(result.insertedCount > 0)
+      })
+    })
+
+    // Orders by email
+    app.get('/admin', (req, res) => {
+      adminCollection.find({adminEmail: req.query.email})
+      .toArray((err, documents) => {
+        res.send(documents[0]);
+      })
     })
 
 });
